@@ -767,9 +767,9 @@ def blog_edit(edit_type, post_id):
     vim.current.window.cursor = (cp.POST_BEGIN, 0)
     vim.command('setl nomodified')
     vim.command('setl textwidth=0')
-    for v in G.LIST_VIEW_KEY_MAP.values():
-        if vim.eval("mapcheck('%s')" % v):
-            vim.command('unmap <buffer> %s' % v)
+    #for v in G.LIST_VIEW_KEY_MAP.values():
+    #    if vim.eval("mapcheck('%s')" % v):
+    #        vim.command('unmap <buffer> %s' % v)
 
 
 @view_switch(assert_view = "list")
