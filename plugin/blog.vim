@@ -688,7 +688,9 @@ def blog_wise_open_view():
     else:
         vim.command(":new")
     vim.command('setl syntax=blogsyntax')
-    vim.command('setl completefunc=Completable')
+    # --- ---
+    #vim.command('setl completefunc=Completable')
+    # --- ---
 
 
 @vim_encoding_check
@@ -767,10 +769,12 @@ def blog_edit(edit_type, post_id):
     vim.current.window.cursor = (cp.POST_BEGIN, 0)
     vim.command('setl nomodified')
     vim.command('setl textwidth=0')
+    # --- ---
     #for v in G.LIST_VIEW_KEY_MAP.values():
     #    if vim.eval("mapcheck('%s')" % v):
     #        vim.command('unmap <buffer> %s' % v)
-
+    vim.command('write! $VUNDLEPATH/vimtmp/blog_id_%s' % post_id)
+    # --- ---
 
 @view_switch(assert_view = "list")
 def blog_delete(edit_type, post_id):
