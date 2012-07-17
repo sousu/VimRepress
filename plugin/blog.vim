@@ -82,6 +82,7 @@ python << EOF
 # -*- coding: utf-8 -*-
 import vim
 import urllib
+import urllib2
 import xmlrpclib
 import re
 import os
@@ -90,6 +91,27 @@ import webbrowser
 import tempfile
 from ConfigParser import SafeConfigParser
 
+# --- proxy setting ---
+class Urllib2Transport(xmlrpclib.Transport):
+    def __init__(self, opener=None, https=False, use_datetime=0):
+        xmlrpclib.Transport.__init__(self, use_datetime)
+        self.opener = opener or urllib2.build_opener()
+        self.https = https
+    
+    def request(self, host, handler, request_body, verbose=0):
+        proto = ('http', 'https')[bool(self.https)]
+        req = urllib2.Request('%s://%s%s' % (proto, host, handler), request_body)
+        req.add_header('User-agent', self.user_agent)
+        self.verbose = verbose
+        return self.parse_response(self.opener.open(req))
+
+# --- ---
+
+
+class HTTPProxyTransport(Urllib2Transport):
+    def __init__(self, proxies, use_datetime=0):
+        opener = urllib2.build_opener(urllib2.ProxyHandler(proxies))
+        Urllib2Transport.__init__(self, opener, use_datetime)
 try:
     import markdown
 except ImportError:
@@ -312,7 +334,13 @@ class wp_xmlrpc(object):
         self.blog_url = blog_url
         self.username = username
         self.password = password
-        p = xmlrpclib.ServerProxy(os.path.join(blog_url, "xmlrpc.php"))
+        # --- proxy setting ---
+        if os.getenv('HTTP_PROXY'):
+            tp = HTTPProxyTransport( { 'http': os.getenv('HTTP_PROXY') } )
+            p = xmlrpclib.ServerProxy(os.path.join(blog_url,"xmlrpc.php"), transport=tp)
+        else: 
+            p = xmlrpclib.ServerProxy(os.path.join(blog_url,"xmlrpc.php"))
+        # --- ---
         self.mw_api = p.metaWeblog
         self.wp_api = p.wp
         self.mt_api = p.mt
