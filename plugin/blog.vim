@@ -801,7 +801,7 @@ def blog_edit(edit_type, post_id):
     #for v in G.LIST_VIEW_KEY_MAP.values():
     #    if vim.eval("mapcheck('%s')" % v):
     #        vim.command('unmap <buffer> %s' % v)
-    vim.command('write! $VUNDLEPATH/vimtmp/blog_id_%s' % post_id)
+    vim.command('write! $BASEPATH/vimtmp/blog_id_%s' % post_id)
     # --- ---
 
 @view_switch(assert_view = "list")
