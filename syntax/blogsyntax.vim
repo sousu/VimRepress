@@ -31,3 +31,4 @@ hi link mkdLineBreak          Underlined
 " 独自設定で設定済みにして 本来のblogsyntaxは読み込まない
 let b:current_syntax = "blogsyntax"
 
+
