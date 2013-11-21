@@ -1,34 +1,36 @@
 "--- ---
-" for Vimpress 
-" original syntax
+" for Vimpress blog original syntax
 "--- ---
 
-" åŸºæœ¬ãƒ™ãƒ¼ã‚¹ è¦Markdown.vim
+" Šî–{İ’è“Ç‚İ‚İ markdown ‚ğƒx[ƒX
 set syntax=markdown
 
-" headeréƒ¨ã®è‰²
+" header•”‚ÌF
 sy match  blogeditorComment   '^".*$'
 sy match  blogeditorEntry     "^ *[0-9]*\t.*$"
-sy match  blogeditorIdent     '^".*:'
+sy match  blogeditorIdent     '^".*:\s'
 hi link blogeditorComment     Comment
 hi link blogeditorEntry       Directory
 hi link blogeditorIdent       Function
 
-" CodeColor pluginç”¨ã®è‰²
 hi link mkdLink               NONE
+
+" URLƒŠƒ“ƒN 
 syntax region mkdLink matchgroup=mkdDelimiter start="\!\?\["  end="\]\ze\s*[[(]" contains=@Spell nextgroup=mkdURL,mkdID skipwhite
     syntax region mkdID   matchgroup=mkdDelimiter start="\["      end="\]" contained
     syntax region mkdURL  matchgroup=mkdDelimiter start="("       end=")"  contained
-syntax region mkdCC   matchgroup=mkdDelimiter start="\[cc.*\]"  end="\[\/cc\]"
 hi link mkdLink               htmlLink
+
+" ©‘Oblog Codecolor “à‚ğ–Ú—§‚½‚È‚¢F‚Éˆµ‚¤
+syntax region mkdCC   matchgroup=mkdDelimiter start="\[cc.*\]"  end="\[\/cc\]"
 hi link mkdCC                 Comment
 
-" ãã®ä»–ã®è‰²
+" ‚»‚Ì‘¼‚ÌF
 hi link htmlH1                Typedef
 hi link mkdListItem           Operator
 hi link mkdLineBreak          Underlined
 
-" ç‹¬è‡ªè¨­å®šã§è¨­å®šæ¸ˆã¿ã«ã—ã¦ æœ¬æ¥ã®blogsyntaxã¯èª­ã¿è¾¼ã¾ãªã„
+" “Æ©İ’è‚Åİ’èÏ‚İ‚É‚µ‚Ä –{—ˆ‚Ìblogsyntax‚Í“Ç‚İ‚Ü‚È‚¢
 let b:current_syntax = "blogsyntax"
 
 

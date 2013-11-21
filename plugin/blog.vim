@@ -1,4 +1,3 @@
-"#######################################################################
 " Copyright (C) 2007 Adrien Friggeri.
 "
 " This program is free software; you can redistribute it and/or modify
@@ -78,10 +77,6 @@ command! -nargs=1 BlogOpen exec('py blog_guess_open(<f-args>)')
 command! -nargs=? BlogSwitch exec('py blog_config_switch(<f-args>)')
 command! -nargs=? BlogCode exec('py blog_append_code(<f-args>)')
 
-" --- filetype setting ---
-set filetype=blog
-" --- ---
-
 python << EOF
 # -*- coding: utf-8 -*-
 import vim
@@ -95,27 +90,6 @@ import webbrowser
 import tempfile
 from ConfigParser import SafeConfigParser
 
-# --- proxy setting ---
-class Urllib2Transport(xmlrpclib.Transport):
-    def __init__(self, opener=None, https=False, use_datetime=0):
-        xmlrpclib.Transport.__init__(self, use_datetime)
-        self.opener = opener or urllib2.build_opener()
-        self.https = https
-    
-    def request(self, host, handler, request_body, verbose=0):
-        proto = ('http', 'https')[bool(self.https)]
-        req = urllib2.Request('%s://%s%s' % (proto, host, handler), request_body)
-        req.add_header('User-agent', self.user_agent)
-        self.verbose = verbose
-        return self.parse_response(self.opener.open(req))
-
-# --- ---
-
-
-class HTTPProxyTransport(Urllib2Transport):
-    def __init__(self, proxies, use_datetime=0):
-        opener = urllib2.build_opener(urllib2.ProxyHandler(proxies))
-        Urllib2Transport.__init__(self, opener, use_datetime)
 try:
     import markdown
 except ImportError:
@@ -157,24 +131,23 @@ echoerr = lambda s: vim.command('echoerr "%s"' % s)
 # Helper Classes
 #################################################
 
-
 class VimPressException(Exception):
     pass
-
 
 class DataObject(object):
 
     #CONST
-    DEFAULT_LIST_COUNT = "15"
+    DEFAULT_LIST_COUNT = "20"
     IMAGE_TEMPLATE = '<a href="%(url)s">' \
                      '<img title="%(file)s" alt="%(file)s" src="%(url)s"' \
                      'class="aligncenter" /></a>'
-    MARKER = dict(bg="=========== Meta ============",
-              mid="=============================",
-              ed="========== Content ==========",
-              more='"====== Press Here for More ======',
-              list_title='"====== '
-                '%(edit_type)s List in %(blog_url)s =========')
+    MARKER = dict(bg='=========== Meta ============',
+                 mid='=============================',
+                  ed='========== Content ==========',
+                more='"====== Press Here for More ======',
+          list_title='"====== %(edit_type)s List in %(blog_url)s =========',
+            modeline='<!-- vim: set ft=markdown syntax=blogsyntax: -->'
+            )
 
     LIST_VIEW_KEY_MAP = dict(enter="<enter>", delete="<delete>")
     CUSTOM_FIELD_KEY = "mkd_text"
@@ -189,10 +162,13 @@ class DataObject(object):
 
     blog_username = property(lambda self: self.xmlrpc.username)
     blog_url = property(lambda self: self.xmlrpc.blog_url)
+    local_draft_dir = property(lambda self: self.xmlrpc.local_draft_dir)
+
     conf_index = property(lambda self: self.__conf_index)
     current_post_id = property(lambda self: self.xmlrpc.current_post_id,
             lambda self, d: setattr(self.xmlrpc, "current_post_id", d))
     post_cache = property(lambda self: self.xmlrpc.post_cache)
+    categories = None
 
     @property
     def current_post(self):
@@ -251,6 +227,7 @@ class DataObject(object):
                     blog_username = config['username']
                     blog_password = config.get('password', '')
                     blog_url = config['blog_url']
+                    local_draft_dir = config['local_draft_dir']
                 except KeyError, e:
                     raise VimPressException("Configuration error: %s" % e)
                 echomsg("Connecting to '%s' ... " % blog_url)
@@ -258,7 +235,7 @@ class DataObject(object):
                     blog_password = vim_input(
                             "Enter password for %s" % blog_url, True)
                 config["xmlrpc_obj"] = wp_xmlrpc(blog_url,
-                        blog_username, blog_password)
+                        blog_username, blog_password, local_draft_dir)
 
             self.__xmlrpc = config["xmlrpc_obj"]
 
@@ -268,6 +245,7 @@ class DataObject(object):
                 categories = [i["description"].encode("utf-8")
                         for i in self.xmlrpc.get_categories()]
                 config["categories"] = categories
+                self.categories = config["categories"]
 
             vim.command('let s:completable = "%s"' % '|'.join(categories))
             echomsg("done.")
@@ -279,7 +257,7 @@ class DataObject(object):
 
             confpsr = SafeConfigParser()
             confile = os.path.expanduser("~/.vimpressrc")
-            conf_options = ("blog_url", "username", "password")
+            conf_options = ("blog_url", "username", "password","local_draft_dir")
 
             if os.path.exists(confile):
                 conf_list = []
@@ -334,17 +312,17 @@ class DataObject(object):
 
 class wp_xmlrpc(object):
 
-    def __init__(self, blog_url, username, password):
+    def __init__(self, blog_url, username, password, local_draft_dir):
         self.blog_url = blog_url
         self.username = username
         self.password = password
-        # --- proxy setting ---
-        if os.getenv('HTTP_PROXY'):
+        self.local_draft_dir = local_draft_dir
+        if os.getenv('HTTP_PROXY'): 
+            # http_proxy setting 
             tp = HTTPProxyTransport( { 'http': os.getenv('HTTP_PROXY') } )
             p = xmlrpclib.ServerProxy(os.path.join(blog_url,"xmlrpc.php"), transport=tp)
         else: 
             p = xmlrpclib.ServerProxy(os.path.join(blog_url,"xmlrpc.php"))
-        # --- ---
         self.mw_api = p.metaWeblog
         self.wp_api = p.wp
         self.mt_api = p.mt
@@ -478,12 +456,11 @@ class ContentStruct(object):
         meta = dict(strid="", title="", slug="",
                 cats="", tags="", editformat="Markdown", edittype="")
         meta.update(self.buffer_meta)
-        meta_text = self.META_TEMPLATE.format(**meta)\
-                .encode('utf-8').splitlines()
+        meta_text = self.META_TEMPLATE.format(**meta).encode('utf-8').splitlines()
         vim.current.buffer[0] = meta_text[0]
         vim.current.buffer.append(meta_text[1:])
-        content = self.buffer_meta.get("content", ' ')\
-                .encode('utf-8').splitlines()
+        vim.current.buffer.append('')
+        content = self.buffer_meta.get("content", ' ').encode('utf-8').splitlines()
         vim.current.buffer.append(content)
 
     def update_buffer_meta(self):
@@ -629,17 +606,38 @@ class ContentStruct(object):
         webbrowser.open("%s?p=%s&preview=true" %
                 (g_data.blog_url, self.post_id))
 
+# for proxy
+class Urllib2Transport(xmlrpclib.Transport):
+    def __init__(self, opener=None, https=False, use_datetime=0):
+        xmlrpclib.Transport.__init__(self, use_datetime)
+        self.opener = opener or urllib2.build_opener()
+        self.https = https
+    
+    def request(self, host, handler, request_body, verbose=0):
+        proto = ('http', 'https')[bool(self.https)]
+        req = urllib2.Request('%s://%s%s' % (proto, host, handler), request_body)
+        req.add_header('User-agent', self.user_agent)
+        self.verbose = verbose
+        return self.parse_response(self.opener.open(req))
+
+class HTTPProxyTransport(Urllib2Transport):
+    def __init__(self, proxies, use_datetime=0):
+        opener = urllib2.build_opener(urllib2.ProxyHandler(proxies))
+        Urllib2Transport.__init__(self, opener, use_datetime)
 
 #################################################
 # Golbal Variables
 #################################################
 G = DataObject
 g_data = DataObject()
+#if os.getenv('VIMPRESS_LOCAL_DRAFT_DIR'):
+#    ld_dir = os.getenv('VIMPRESS_LOCAL_DRAFT_DIR') 
+#else:
+#    ld_dir = os.getenv('VIMPRESS_LOCAL_DRAFT_DIR') 
 
 #################################################
 # Helper Functions
 #################################################
-
 
 def vim_encoding_check(func):
     """
@@ -656,9 +654,9 @@ def vim_encoding_check(func):
         elif orig_enc != "utf-8":
             modified = vim.eval("&modified")
             buf_list = '\n'.join(vim.current.buffer).decode(orig_enc).encode('utf-8').splitlines()
-            del vim.current.buffer[:]
+            del vim.current.buffer[:] 
             vim.command("setl encoding=utf-8")
-            vim.current.buffer[0] = buf_list[0]
+            vim.current.buffer[0] = buf_list[0]  #!issue brank ERR
             if len(buf_list) > 1:
                 vim.current.buffer.append(buf_list[1:])
             if modified == '0':
@@ -720,9 +718,6 @@ def blog_wise_open_view():
     else:
         vim.command(":new")
     vim.command('setl syntax=blogsyntax')
-    # --- ---
-    #vim.command('setl completefunc=Completable')
-    # --- ---
 
 
 @vim_encoding_check
@@ -731,6 +726,10 @@ def vim_input(message = 'input', secret = False):
     vim.command("let user_input = %s('%s :')" % (("inputsecret" if secret else "input"), message))
     vim.command('call inputrestore()')
     return vim.eval('user_input')
+
+def make_local_draft_file(ld_dir,title,categorie,blog_id):
+    fpath = "%s/[%s] %s %s.txt" % (ld_dir,categorie,blog_id,title)
+    vim.command("silent! write! %s" % fpath) # ignore .swp 
 
 
 #################################################
@@ -759,6 +758,10 @@ def blog_save(pub = None):
     cp.save_post()
     cp.update_buffer_meta()
     g_data.current_post = cp
+    make_local_draft_file(g_data.local_draft_dir, 
+                          cp.buffer_meta["title"].encode('utf-8'), 
+                          cp.buffer_meta["cats"].encode('utf-8'), 
+                          cp.post_id)
     notify = "%s ID=%s saved with status '%s'" % (cp.post_status, cp.post_id, cp.post_status)
     echomsg(notify)
     vim.command('setl nomodified')
@@ -778,7 +781,7 @@ def blog_new(edit_type = "post", currentContent = None):
     g_data.current_post = ContentStruct(edit_type = edit_type)
     cp = g_data.current_post
     cp.fill_buffer()
-
+    vim.current.buffer.append(G.MARKER['modeline'])
 
 @view_switch(view = "edit")
 def blog_edit(edit_type, post_id):
@@ -799,14 +802,12 @@ def blog_edit(edit_type, post_id):
 
     cp.fill_buffer()
     vim.current.window.cursor = (cp.POST_BEGIN, 0)
+    make_local_draft_file(g_data.local_draft_dir, 
+                          cp.buffer_meta["title"].encode('utf-8'), 
+                          cp.buffer_meta["cats"].encode('utf-8'), 
+                          post_id)
     vim.command('setl nomodified')
-    vim.command('setl textwidth=0')
-    # --- ---
-    #for v in G.LIST_VIEW_KEY_MAP.values():
-    #    if vim.eval("mapcheck('%s')" % v):
-    #        vim.command('unmap <buffer> %s' % v)
-    vim.command('write! $BASEPATH/vimtmp/blog_id_%s' % post_id)
-    # --- ---
+    vim.command('set syntax=blogsyntax')
 
 @view_switch(assert_view = "list")
 def blog_delete(edit_type, post_id):
@@ -917,8 +918,6 @@ def blog_list(edit_type = "post", keep_type = False):
             % G.LIST_VIEW_KEY_MAP % edit_type)
     vim.command("map <silent> <buffer> %(delete)s :py blog_list_on_key_press('delete', '%%s')<cr>"
             % G.LIST_VIEW_KEY_MAP % edit_type)
-    echomsg("Press <Enter> to edit. <Delete> to move to trash.")
-
 
 @exception_check
 @vim_encoding_check
@@ -1052,3 +1051,5 @@ def blog_config_switch(index = -1, refresh_list = False):
     if refresh_list:
         blog_list(keep_type = True)
     echomsg("Vimpress switched to '%s'@'%s'" % (g_data.blog_username, g_data.blog_url))
+
+# vim: set ft=python:
