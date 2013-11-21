@@ -1,11 +1,11 @@
 
 VimからWordpressへの投稿等を行える  
-VimRepress(http://www.vim.org/scripts/script.php?script_id=3510) の私家版。
+[VimRepress](http://www.vim.org/scripts/script.php?script_id=3510) の私家版。
 
 ### 改造している主な点
 
  - 投稿原稿をWordpressから読み出し時もしくは投稿時にあらかじめ設定したローカルフォルダに保存，
-   Dropboxフォルダを指定して，下書き原稿の共有を想定。
+   Dropboxフォルダなどを指定して下書き原稿の共有を想定。
  - プロキシ設定の読み込み 環境変数`HTTP_PROXY`を自動的に判断
  - 編集時独自シンタクスハイライト（markdownベース）
 
