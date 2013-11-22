@@ -41,16 +41,19 @@
 " format:
 "
 "[Blog0]
-"blog_url = http://a-blog.com/
-"username = admin
-"password = 123456
+"blog_url        = http://a-blog.com/
+"username        = admin
+"password        = 123456
+"local_draft_dir = /tmp/blog_drafts
 "
 "[Blog1]
-"blog_url = https://someone.wordpress.com/
-"username = someone
-"password =
+"blog_url        = https://someone.wordpress.com/
+"username        = someone
+"password        =
+"local_draft_dir = ~/Dropbox/blog
 "
 "#######################################################################
+""'
 
 if !has("python")
     finish
@@ -878,7 +881,7 @@ def append_blog_list(edit_type, count = G.DEFAULT_LIST_COUNT):
         posts_titles = g_data.xmlrpc.get_recent_post_titles(retrive_count)
 
         vim.current.buffer.append(
-                [(u"%(postid)s\t%(title)s" % p).encode('utf-8')
+                [(u"  %(postid)s\t%(title)s" % p).encode('utf-8')
                     for p in posts_titles[current_posts:]])
     else:
         pages = g_data.xmlrpc.get_page_list()
