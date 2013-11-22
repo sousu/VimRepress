@@ -1,36 +1,41 @@
-"--- ---
+ï»¿"--- ---
 " for Vimpress blog original syntax
 "--- ---
 
-" Šî–{İ’è“Ç‚İ‚İ markdown ‚ğƒx[ƒX
+" åŸºæœ¬è¨­å®šèª­ã¿è¾¼ã¿ markdown ã‚’ãƒ™ãƒ¼ã‚¹
 set syntax=markdown
 
-" header•”‚ÌF
-sy match  blogeditorComment   '^".*$'
-sy match  blogeditorEntry     "^ *[0-9]*\t.*$"
-sy match  blogeditorIdent     '^".*:\s'
+" headeréƒ¨ã®è‰²
+syntax match  blogeditorComment   '^".*$'
+syntax match  blogeditorEntry     "^ *[0-9]*\t.*$"
+syntax match  blogeditorIdent     '^".*:\s'
 hi link blogeditorComment     Comment
 hi link blogeditorEntry       Directory
 hi link blogeditorIdent       Function
 
 hi link mkdLink               NONE
 
-" URLƒŠƒ“ƒN 
-syntax region mkdLink matchgroup=mkdDelimiter start="\!\?\["  end="\]\ze\s*[[(]" contains=@Spell nextgroup=mkdURL,mkdID skipwhite
-    syntax region mkdID   matchgroup=mkdDelimiter start="\["      end="\]" contained
-    syntax region mkdURL  matchgroup=mkdDelimiter start="("       end=")"  contained
+" URLãƒªãƒ³ã‚¯ 
+"syntax region mkdLink matchgroup=mkdDelimiter start="\["  end="\]\s*[[(]" contains=@Spell nextgroup=mkdURL,mkdID skipwhite
+"    syntax region mkdID   matchgroup=mkdDelimiter start="\["      end="\]" contained
+"    syntax region mkdURL  matchgroup=mkdDelimiter start="("       end=")"  contained
+"hi link mkdLink               htmlLink
+
+syntax region mkdLink matchgroup=mkdDelimiter start="!\=\[\%(\_[^]]*]\%( \=[[(]\)\)\@=" end="\]\%( \=[[(]\)\@=" keepend nextgroup=markdownLink,markdownId skipwhite contains=@markdownInline,markdownLineStart
+  syntax region mkdURL matchgroup=mkdDelimiter start="(" end=")" contains=markdownUrl keepend contained
+  syntax region mkdID matchgroup=mkdDelimiter start="\[" end="\]" keepend contained
+  syntax region mrkdAutomaticLink matchgroup=mkdDelimiter start="<\%(\w\+:\|[[:alnum:]_+-]\+@\)\@=" end=">" keepend oneline
 hi link mkdLink               htmlLink
 
-" ©‘Oblog Codecolor “à‚ğ–Ú—§‚½‚È‚¢F‚Éˆµ‚¤
+
+" è‡ªå‰blog Codecolor å†…ã‚’ç›®ç«‹ãŸãªã„è‰²ã«æ‰±ã†
 syntax region mkdCC   matchgroup=mkdDelimiter start="\[cc.*\]"  end="\[\/cc\]"
 hi link mkdCC                 Comment
 
-" ‚»‚Ì‘¼‚ÌF
+" ãã®ä»–ã®è‰²
 hi link htmlH1                Typedef
 hi link mkdListItem           Operator
 hi link mkdLineBreak          Underlined
 
-" “Æ©İ’è‚Åİ’èÏ‚İ‚É‚µ‚Ä –{—ˆ‚Ìblogsyntax‚Í“Ç‚İ‚Ü‚È‚¢
 let b:current_syntax = "blogsyntax"
-
-
+" vim: set ft=vim:
