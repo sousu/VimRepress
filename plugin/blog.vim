@@ -664,6 +664,7 @@ def vim_encoding_check(func):
                 vim.current.buffer.append(buf_list[1:])
             if modified == '0':
                 vim.command('setl nomodified')
+        vim.command("setl fileencoding=utf-8") #!issue 場合分け
         return func(*args, **kw)
     return __check
 
@@ -731,7 +732,7 @@ def vim_input(message = 'input', secret = False):
     return vim.eval('user_input')
 
 def make_local_draft_file(ld_dir,title,categorie,blog_id):
-    fpath = "%s/[%s] %s %s.txt" % (ld_dir,categorie,blog_id,title)
+    fpath = "%s/%s [%05d] %s.md" % (ld_dir,categorie,int(blog_id),title)
     vim.command("silent! write! %s" % fpath) # ignore .swp 
 
 
