@@ -659,12 +659,12 @@ def vim_encoding_check(func):
             buf_list = '\n'.join(vim.current.buffer).decode(orig_enc).encode('utf-8').splitlines()
             del vim.current.buffer[:] 
             vim.command("setl encoding=utf-8")
+            vim.command("setl fileencoding=utf-8") #!issue 場合分け
             vim.current.buffer[0] = buf_list[0]  #!issue brank ERR
             if len(buf_list) > 1:
                 vim.current.buffer.append(buf_list[1:])
             if modified == '0':
                 vim.command('setl nomodified')
-        vim.command("setl fileencoding=utf-8") #!issue 場合分け
         return func(*args, **kw)
     return __check
 
