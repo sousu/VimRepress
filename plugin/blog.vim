@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 " Copyright (C) 2007 Adrien Friggeri.
 "
 " This program is free software; you can redistribute it and/or modify
@@ -2121,4 +2120,3 @@ def blog_config_switch(index = -1, refresh_list = False):
     echomsg("Vimpress switched to '%s'@'%s'" % (g_data.blog_username, g_data.blog_url))
 
 # vim: set ft=python:
->>>>>>> b6416aa03eba78b5e86fc6925a11ec64c24b3d70
