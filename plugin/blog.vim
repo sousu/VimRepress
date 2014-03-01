@@ -659,8 +659,7 @@ def vim_encoding_check(func):
             buf_list = '\n'.join(vim.current.buffer).decode(orig_enc).encode('utf-8').splitlines()
             del vim.current.buffer[:] 
             vim.command("setl encoding=utf-8")
-            vim.command("setl fileencoding=utf-8") #!issue 場合分け
-            vim.current.buffer[0] = buf_list[0]  #!issue brank ERR
+            vim.current.buffer[0] = buf_list[0]  #!issue brank_ERR発生 デフォルトでutf-8の分には通過しない 
             if len(buf_list) > 1:
                 vim.current.buffer.append(buf_list[1:])
             if modified == '0':
@@ -713,9 +712,10 @@ def blog_wise_open_view():
     """
     Wisely decides whether to wipe out the content of current buffer or open a new splited window.
     """
-    if vim.current.buffer.name is None and \
-            (vim.eval('&modified') == '0' or
-                len(vim.current.buffer) == 1):
+    if (vim.current.buffer.name is None or \
+        vim.current.buffer.name is '') and \
+            (vim.eval('&modified') == '0' or \
+             len(vim.current.buffer) == 1):
         vim.command('setl modifiable')
         del vim.current.buffer[:]
         vim.command('setl nomodified')
@@ -762,6 +762,7 @@ def blog_save(pub = None):
     cp.save_post()
     cp.update_buffer_meta()
     g_data.current_post = cp
+    vim.command("setl fileencoding=utf-8")
     make_local_draft_file(g_data.local_draft_dir, 
                           cp.buffer_meta["title"].encode('utf-8'), 
                           cp.buffer_meta["cats"].encode('utf-8'), 
@@ -811,6 +812,7 @@ def blog_edit(edit_type, post_id):
                           cp.buffer_meta["cats"].encode('utf-8'), 
                           post_id)
     vim.command('setl nomodified')
+    vim.command("setl fileencoding=utf-8")
     vim.command('set syntax=blogsyntax')
 
 @view_switch(assert_view = "list")
