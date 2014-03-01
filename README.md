@@ -11,8 +11,9 @@ VimからWordpressへの投稿等を行える
 
 ### 導入
 
-pythonモジュール markdown2 が必須
+markdown系 pythonモジュールが必須
 
+    easy_install markdown
     easy_install markdown2
 
 Vundle
