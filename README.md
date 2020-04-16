@@ -1,6 +1,5 @@
 
-VimからWordpressへの投稿等を行える  
-[VimRepress](http://www.vim.org/scripts/script.php?script_id=3510) の私家版。
+VimからWordpressへの投稿等を行える [VimRepress](http://www.vim.org/scripts/script.php?script_id=3510) の私家版。
 
 ### 改造している主な点
 
@@ -34,12 +33,10 @@ Wordpress側がunicodeのみ対応のため，vim側もUTF-8とする形のほ�
 
 ### 操作
 
-本家から変わっておりません。基本的には以下。  
-ローカルに保存したDraftを直接BlogSaveする事で素早く投稿が可能。
+本家から変わっておりません。基本は以下。 
+ローカルに保存したDraftを直接BlogSaveする事で素早く投稿することを目的としています。
 
  - 新規作成 :BlogNew
  - 編集リスト :BlogList
  - 投稿 :BlogSave
-
-
 
